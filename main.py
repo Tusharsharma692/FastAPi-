@@ -1,39 +1,39 @@
-from fastapi import FastAPI,Query
-from typing import Optional
+from fastapi import FastAPI
+from pydantic import BaseModel
+
+
+class User(BaseModel):
+    name:str
+    age:int
+    roll_No:int
+
 
 app=FastAPI()
-
-# query parameters
-
-@app.get("/")
-def home():
-    return {"message":"Hello World"}
+# POST API and DATA validation
 
 
-# default value for query parameter
-
-@app.get("/items")
-def read_items(skip:int=0,limit:int=10):
-    return {"skip":skip,"limit":limit}
-
-# required query parameter
-
-@app.get("/users")
-def read_users(q:str,age:int=10):
-    return {"q":q,"age":age}
-
-# Optional Parameters with None
-
-@app.get("/products")
-def read_products(q:Optional[str]=None):
-    if q:
-        return {"q":q}
-    return {"message":"No query parameter provided"}
+@app.post("/items")
+def create_item(id:str,price:int):
+    return {
+        "Message":"Item created successfully",
+        "id":id,
+        "price":price
+    }
 
 
-# Advance : Query Parameters
+@app.post("/users")
+def create_user(dic:dict):
+    return {
+        "Message":"User created successfully",
+        "data":dic
+    }
 
-@app.get("/search")
-def search_items(q:str=Query(default=None,min_length=3,max_length=50,patterns="^fixed_")):
-    return {"q":q}
 
+# using pydantic model for data validation
+
+@app.post("/USERS")
+def create_user(user:User):
+    return {
+        "Message":"User created successfully",
+        "data":user
+    }
