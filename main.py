@@ -1,59 +1,39 @@
-from fastapi import FastAPI,Path
-from enum import Enum
-
-class ModelName(str, Enum):
-    alexnet = "alexnet"
-    resnet = "resnet"
-    lenet = "lenet"
-
+from fastapi import FastAPI,Query
+from typing import Optional
 
 app=FastAPI()
 
-# Path parameters
+# query parameters
 
 @app.get("/")
-def home_page():
-    return {"Message":"Welcome to FastAPI"}
+def home():
+    return {"message":"Hello World"}
 
 
-# 1. Basic path parameter
+# default value for query parameter
 
-@app.get("/users/{user_id}")
-def get_user(user_id):
-    return {"User ID":user_id}
+@app.get("/items")
+def read_items(skip:int=0,limit:int=10):
+    return {"skip":skip,"limit":limit}
 
-# 2. Path parameter with type conversion
+# required query parameter
 
-@app.get("/items/{item_id}")
-def get_item(item_id:int):
-    return {"Item ID":item_id}
+@app.get("/users")
+def read_users(q:str,age:int=10):
+    return {"q":q,"age":age}
 
-# 3. Multiple path parameters
-@app.get("/orders/{order_id}/items/{item_id}")
-def get_order_item(order_id:int, item_id:int):
-    return {"Order ID":order_id, "Item ID":item_id}
+# Optional Parameters with None
 
-# 4 Advance path validation
-@app.get("/products/{product_id}")
-def get_product(
-    product_id:int = Path(title="Product ID", description="The ID of the product to retrieve", gt=0, lt=100)
-):
-    return {"Product ID":product_id}
-
-# 5. Path Paramter containing Paths
-
-@app.get("/files/{file_path:path}")
-def get_file(file_path:str):
-    return {"File Path":file_path}
-
-# 6 with enum
-
-@app.get("/models/{model_name}")
-def get_model(model_name: ModelName):
-    if model_name is ModelName.alexnet:
-        return {"model_name": model_name, "message": "Deep Learning FTW!"}
-    
-    return {"model_name": model_name, "message": "Have some residuals"}
+@app.get("/products")
+def read_products(q:Optional[str]=None):
+    if q:
+        return {"q":q}
+    return {"message":"No query parameter provided"}
 
 
+# Advance : Query Parameters
+
+@app.get("/search")
+def search_items(q:str=Query(default=None,min_length=3,max_length=50,patterns="^fixed_")):
+    return {"q":q}
 
