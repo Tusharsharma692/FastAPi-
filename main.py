@@ -7,6 +7,18 @@ class User(BaseModel):
     age:int
     roll_No:int
 
+class Address(BaseModel):
+    city:str
+    state:str
+    country:str
+
+
+class UserWithAddress(User):
+    name:str
+    age:int
+    roll_No:int
+    address:Address
+
 
 app=FastAPI()
 # POST API and DATA validation
@@ -33,6 +45,16 @@ def create_user(dic:dict):
 
 @app.post("/USERS")
 def create_user(user:User):
+    return {
+        "Message":"User created successfully",
+        "data":user
+    }
+
+
+# nested pydantic model for data validation
+
+@app.post("/users_with_address")
+def create(user:UserWithAddress):
     return {
         "Message":"User created successfully",
         "data":user
