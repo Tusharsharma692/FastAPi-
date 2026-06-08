@@ -1,20 +1,39 @@
-from fastapi import FastAPI
-from pydantic import BaseModel,EmailStr
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel, EmailStr
+from typing import Optional
+
+lists=[]
 
 class user(BaseModel):
     id:int
     name:str
-    emal:EmailStr
+    email:EmailStr
+    password:int
 
 
-users=[]
+class serverResponse(BaseModel):
+    id:int
+    name:str
+    email:EmailStr
+
 app=FastAPI()
 
-@app.post("/user")
+@app.get("/")
+def greet(name:Optional[str]=None):
+
+    if name:
+        return {
+            "Message":f"Hello {name}! welcome to FastAPI"
+        }
+    return{
+        "Message":"Hello! welcome to FastAPI"
+    }
+
+
+@app.post("/users")
 def create_user(user:user):
     try:
-        users.append(user)
-
+        lists.append(user)
         return {
             "Message":"User created successfully",
             "Data":user
@@ -26,20 +45,29 @@ def create_user(user:user):
         }
     
 
-@app.put("/user/{user_id}")
-def update_user(user_id:int,user:user,notify:bool=False): 
-    
-    ''' notify is an optional query parameter to indicate whether to send a notification after updating the user'''
 
-    for idx,usr in enumerate(users):
-        if usr.id == user_id:
-            users[idx]=user
-            if notify:
-                return {
-                    "Message":"User updated successfully and notification sent",
-                    "Data":users
-                }
-            return {
-                "Message":"User updated successfully",
-                "Data":users
-            }
+'''The password field is automatically removed because it is not part of ServerResponse. This is one of the main uses of response_model.
+'''
+
+
+'''
+ return {
+            "Message":"User not found"
+        }
+
+        we can't use this response because it doesn't match the response_model. 
+
+
+'''
+@app.get("/users",response_model=serverResponse)
+def get_user(user_id:int):
+    for user in lists:
+        if user.id==user_id:
+            return user
+    
+    raise HTTPException(
+        status_code=404,
+        detail="User not found"
+    )
+    
+
