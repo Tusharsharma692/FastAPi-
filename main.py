@@ -1,61 +1,45 @@
 from fastapi import FastAPI
-from pydantic import BaseModel
+from pydantic import BaseModel,EmailStr
 
-
-class User(BaseModel):
+class user(BaseModel):
+    id:int
     name:str
-    age:int
-    roll_No:int
-
-class Address(BaseModel):
-    city:str
-    state:str
-    country:str
+    emal:EmailStr
 
 
-class UserWithAddress(User):
-    name:str
-    age:int
-    roll_No:int
-    address:Address
-
-
+users=[]
 app=FastAPI()
-# POST API and DATA validation
 
+@app.post("/user")
+def create_user(user:user):
+    try:
+        users.append(user)
 
-@app.post("/items")
-def create_item(id:str,price:int):
-    return {
-        "Message":"Item created successfully",
-        "id":id,
-        "price":price
-    }
+        return {
+            "Message":"User created successfully",
+            "Data":user
+        }
+    except Exception as e:
+        return {
+            "Message":"Error creating user",
+            "Error":str(e)
+        }
+    
 
+@app.put("/user/{user_id}")
+def update_user(user_id:int,user:user,notify:bool=False): 
+    
+    ''' notify is an optional query parameter to indicate whether to send a notification after updating the user'''
 
-@app.post("/users")
-def create_user(dic:dict):
-    return {
-        "Message":"User created successfully",
-        "data":dic
-    }
-
-
-# using pydantic model for data validation
-
-@app.post("/USERS")
-def create_user(user:User):
-    return {
-        "Message":"User created successfully",
-        "data":user
-    }
-
-
-# nested pydantic model for data validation
-
-@app.post("/users_with_address")
-def create(user:UserWithAddress):
-    return {
-        "Message":"User created successfully",
-        "data":user
-    }
+    for idx,usr in enumerate(users):
+        if usr.id == user_id:
+            users[idx]=user
+            if notify:
+                return {
+                    "Message":"User updated successfully and notification sent",
+                    "Data":users
+                }
+            return {
+                "Message":"User updated successfully",
+                "Data":users
+            }
