@@ -1,73 +1,88 @@
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel, EmailStr
+from fastapi import FastAPI,HTTPException,Request
+from fastapi.responses import JSONResponse 
 from typing import Optional
-
-lists=[]
-
-class user(BaseModel):
-    id:int
-    name:str
-    email:EmailStr
-    password:int
-
-
-class serverResponse(BaseModel):
-    id:int
-    name:str
-    email:EmailStr
+from pydantic import BaseModel, EmailStr
 
 app=FastAPI()
 
-@app.get("/")
-def greet(name:Optional[str]=None):
+USERS=[]
 
-    if name:
-        return {
-            "Message":f"Hello {name}! welcome to FastAPI"
+
+class user(BaseModel):
+    name:str
+    id:int
+    Email:EmailStr
+
+class serverResponse(BaseModel):
+    name:str
+    message:str
+
+# Custom exception for user not found
+class UserNotFoundException(Exception):
+    def __init__(self,user_id:int):
+        self.user_id=user_id
+
+
+@app.exception_handler(UserNotFoundException)
+def UserNotFoundHandler(request:Request,exc:UserNotFoundException):
+    return JSONResponse(
+        status_code = 404,
+        content={
+            "message":"User Not found",
+            "User_id":exc.user_id
         }
-    return{
-        "Message":"Hello! welcome to FastAPI"
+    )
+
+
+@app.get("/",status_code=200)
+def greet(name : Optional[str]=None):
+    if name:
+        return {"message": f"Hello, {name}! Welcome to FastAPI."}
+
+    return {
+        "message": "Hello! Welcome to FastAPI."
     }
 
 
-@app.post("/users")
+
+@app.post("/user")
 def create_user(user:user):
     try:
-        lists.append(user)
-        return {
-            "Message":"User created successfully",
-            "Data":user
-        }
+        USERS.append(user)
+        return {"message":"User created succcessfully"}
     except Exception as e:
-        return {
-            "Message":"Error creating user",
-            "Error":str(e)
-        }
+        return {"message":f"An error occurred: {str(e)}"}
     
 
+ 
+''' HTTPExceptions are used to handle errors and return appropriate HTTP status codes and messages to the client.'''
 
-'''The password field is automatically removed because it is not part of ServerResponse. This is one of the main uses of response_model.
-'''
-
-
-'''
- return {
-            "Message":"User not found"
-        }
-
-        we can't use this response because it doesn't match the response_model. 
-
-
-'''
-@app.get("/users",response_model=serverResponse)
+@app.get("/users/{user_id}",response_model=serverResponse)
 def get_user(user_id:int):
-    for user in lists:
-        if user.id==user_id:
-            return user
+    for user in USERS:
+        if user.id == user_id:
+            return serverResponse(name=user.name,message="User found")
     
     raise HTTPException(
         status_code=404,
         detail="User not found"
     )
+
+
+
+# using CustomException with app.exception_handler
+@app.put("/users/{user_id}")
+def update_user(user_id:int,updated_user:user):
+
+    for idx,user in enumerate(USERS):
+        if user.id == user_id:
+            USERS[idx]=updated_user
+            return {
+                "message":"User successfully found and updated"
+            }
     
+    raise UserNotFoundException(user_id)
+
+
+
 
