@@ -1,36 +1,27 @@
-from fastapi import FastAPI,Depends,Header,HTTPException
+from fastapi import FastAPI,Request
+import time
 
 app=FastAPI()
 
+# @app.middleware("http")
+# async def my_middleWare(request:Request,call_next):
+#     print("Request Received")
 
-'''
-def common_logic():
-    return {
-        "Message":"Common Logic Executed"
-    }
+#     response= await call_next(request)
 
-@app.get("/home")
-def home(data = Depends(common_logic)):
-    return data
+#     print("Response Sent")
 
-@app.get("/profile")
-def greet(data=Depends(common_logic)):
-    return data
-'''
+#     return response
 
-def verify_token(token:str=Header(None)):
-    if token != "mysecretToken":
-        raise HTTPException(
-            status_code=401,
-            detail="Unauthorized"
-        )
-    return {
-        "user":"Authorized User"
-    }
 
-@app.get("/secure-data")
-def secure_data(user=Depends(verify_token)):
-    return {
-        "message":"Secure data accessed",
-        "user":user
-    }
+@app.middleware("http")
+async def my_login_middleware(request:Request,call_next):
+    start_time=time.time()
+
+    response = await call_next(request)
+
+    process_time=time.time()-start_time
+
+    print(f"Process_Time:{process_time} and Path:{request.url.path}")
+
+    return response

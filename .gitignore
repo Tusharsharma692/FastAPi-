@@ -1,3 +1,5 @@
 myenv/
 __pycache__/
 crud_operations.py
+sample.py
+
